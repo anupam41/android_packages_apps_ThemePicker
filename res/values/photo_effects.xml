@@ -1,0 +1,7 @@
+<resources>
+    <string name="photo_effects_title">Photo effects</string>
+    <string name="photo_effect_glass">Fluted glass</string>
+    <string name="photo_effect_blur">Soft blur</string>
+    <string name="photo_effect_rendering">Preparing wallpaper preview…</string>
+    <string name="photo_effect_failed">Couldn’t prepare this photo for preview.</string>
+</resources>

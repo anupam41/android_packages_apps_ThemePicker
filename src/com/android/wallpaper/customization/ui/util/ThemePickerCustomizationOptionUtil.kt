@@ -39,6 +39,7 @@ constructor(private val defaultCustomizationOptionUtil: DefaultCustomizationOpti
     }
 
     enum class ThemePickerHomeCustomizationOption : CustomizationOption {
+        PHOTO_EFFECTS,
         SCREEN_SAVER,
         PACK_THEME,
         COLORS,

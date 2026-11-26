@@ -47,6 +47,7 @@ import com.android.customization.picker.color.ui.binder.ColorsFloatingSheetBinde
 import com.android.customization.picker.color.ui.compose.ColorFloatingSheet
 import com.android.customization.picker.color.ui.view.ColorOptionIconView
 import com.android.customization.picker.color.ui.viewmodel.ColorOptionIconViewModel
+import com.android.customization.picker.effects.PhotoEffectsActivity
 import com.android.customization.picker.grid.ui.binder.GridFloatingSheetBinder
 import com.android.customization.picker.icon.ui.binder.AppIconFloatingSheetBinder
 import com.android.customization.picker.icon.ui.binder.ShapeIconViewBinder
@@ -56,6 +57,7 @@ import com.android.customization.picker.quickaffordance.ui.compose.ShortcutsFloa
 import com.android.customization.picker.settings.ui.binder.ColorContrastSectionViewBinder2
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockAxisStyle
 import com.android.themepicker.R
+import com.android.wallpaper.model.Screen
 import com.android.wallpaper.config.BaseFlags
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption
@@ -144,6 +146,22 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
         val optionsViewModel =
             viewModel.customizationOptionsViewModel as ThemePickerCustomizationOptionsViewModel
 
+        view.findViewById<View>(R.id.preview_page_indicator)?.let { indicator ->
+            val lockDot = indicator.requireViewById<View>(R.id.lock_page_dot)
+            val homeDot = indicator.requireViewById<View>(R.id.home_page_dot)
+            lifecycleOwner.lifecycleScope.launch {
+                lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    combine(viewModel.selectedPreviewScreen, optionsViewModel.selectedOption) {
+                        screen, option -> screen to (option == null)
+                    }.collectLatest { (screen, visible) ->
+                        indicator.isVisible = visible
+                        lockDot.alpha = if (screen == Screen.LOCK_SCREEN) 1f else 0.3f
+                        homeDot.alpha = if (screen == Screen.HOME_SCREEN) 1f else 0.3f
+                    }
+                }
+            }
+        }
+
         val isOnMainScreen = { optionsViewModel.selectedOption.value == null }
 
         val allCustomizationOptionEntries =
@@ -185,6 +203,13 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
                 lifecycleOwner = lifecycleOwner,
             )
         }
+
+        homeScreenCustomizationOptionEntries
+            .firstOrNull { it.first == ThemePickerHomeCustomizationOption.PHOTO_EFFECTS }
+            ?.second
+            ?.setOnClickListener { entry ->
+                entry.context.startActivity(Intent(entry.context, PhotoEffectsActivity::class.java))
+            }
 
         val optionClock: View =
             lockScreenCustomizationOptionEntries

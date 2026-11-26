@@ -33,6 +33,7 @@ import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptio
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.COLOR_CONTRAST
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.GRID
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.PACK_THEME
+import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.PHOTO_EFFECTS
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.SCREEN_SAVER
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption.CLOCK
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption.LOCK_SCREEN_NOTIFICATIONS
@@ -135,6 +136,14 @@ constructor(
             HOME_SCREEN ->
                 buildList {
                     addAll(defaultOptionEntries)
+                    add(
+                        PHOTO_EFFECTS to
+                            layoutInflater.inflate(
+                                R.layout.customization_option_entry_photo_effects,
+                                optionContainer,
+                                false,
+                            )
+                    )
                     if (BaseFlags.get(context).shouldShowDesktopUi(optionContainer.context)) {
                         add(
                             SCREEN_SAVER to
