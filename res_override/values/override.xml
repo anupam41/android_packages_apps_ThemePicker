@@ -46,4 +46,7 @@
     <string name="camera_package" translatable="false">com.android.camera2</string>
     <dimen name="wallpaper_picker_entry_background_top_corner_radius">24dp</dimen>
     <dimen name="customization_option_entry_corner_radius_large">24dp</dimen>
+    <dimen name="preview_page_controls_height">48dp</dimen>
+    <!-- Keep the gallery visible on products shipping a single bundled wallpaper. -->
+    <integer name="wallpaper_carousel_items_min_count">1</integer>
 </resources>

@@ -25,7 +25,7 @@
         android:id="@+id/preview_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="@dimen/customization_picker_preview_bottom_padding"
+        android:layout_marginBottom="@dimen/preview_page_controls_height"
         app:layoutDescription="@xml/preview_pager_motion_scene">
 
         <TextView
@@ -95,24 +95,28 @@
     <LinearLayout
         android:id="@+id/preview_page_indicator"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/customization_picker_preview_bottom_padding"
+        android:layout_height="@dimen/preview_page_controls_height"
         android:layout_gravity="bottom|center_horizontal"
         android:gravity="center"
-        android:orientation="horizontal"
-        android:importantForAccessibility="noHideDescendants">
+        android:orientation="horizontal">
 
-        <View
+        <ImageButton
             android:id="@+id/lock_page_dot"
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:background="@drawable/preview_page_dot" />
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/lock_screen_tab"
+            android:scaleType="center"
+            android:src="@drawable/preview_page_dot" />
 
-        <View
+        <ImageButton
             android:id="@+id/home_page_dot"
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_marginStart="5dp"
-            android:background="@drawable/preview_page_dot" />
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/home_screen_tab"
+            android:scaleType="center"
+            android:src="@drawable/preview_page_dot" />
     </LinearLayout>
 
     <View

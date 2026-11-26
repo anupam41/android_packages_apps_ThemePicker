@@ -29,6 +29,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.net.toUri
@@ -147,16 +148,32 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
             viewModel.customizationOptionsViewModel as ThemePickerCustomizationOptionsViewModel
 
         view.findViewById<View>(R.id.preview_page_indicator)?.let { indicator ->
+            if (BaseFlags.get(view.context).shouldShowDesktopUi(view.context)) {
+                indicator.isVisible = false
+                return@let
+            }
             val lockDot = indicator.requireViewById<View>(R.id.lock_page_dot)
             val homeDot = indicator.requireViewById<View>(R.id.home_page_dot)
+            val pager = view.requireViewById<MotionLayout>(R.id.preview_pager)
+            lockDot.setOnClickListener { pager.transitionToState(R.id.lock_preview_selected) }
+            homeDot.setOnClickListener { pager.transitionToState(R.id.home_preview_selected) }
             lifecycleOwner.lifecycleScope.launch {
                 lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                     combine(viewModel.selectedPreviewScreen, optionsViewModel.selectedOption) {
                         screen, option -> screen to (option == null)
                     }.collectLatest { (screen, visible) ->
-                        indicator.isVisible = visible
-                        lockDot.alpha = if (screen == Screen.LOCK_SCREEN) 1f else 0.3f
-                        homeDot.alpha = if (screen == Screen.HOME_SCREEN) 1f else 0.3f
+                        if (indicator.isVisible != visible) {
+                            indicator.isVisible = visible
+                            val params = pager.layoutParams as ViewGroup.MarginLayoutParams
+                            params.bottomMargin =
+                                if (visible) indicator.layoutParams.height
+                                else view.resources.getDimensionPixelSize(
+                                    R.dimen.customization_picker_preview_bottom_padding
+                                )
+                            pager.layoutParams = params
+                        }
+                        lockDot.isSelected = screen == Screen.LOCK_SCREEN
+                        homeDot.isSelected = screen == Screen.HOME_SCREEN
                     }
                 }
             }
