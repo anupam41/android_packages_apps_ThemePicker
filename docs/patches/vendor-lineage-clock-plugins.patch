@@ -1,0 +1,28 @@
+From 3786423a1b99f298f1720d53b805d3249d2a6cc8 Mon Sep 17 00:00:00 2001
+From: Codex <codex@openai.com>
+Date: Fri, 27 Nov 2026 01:04:09 +0530
+Subject: [PATCH] Inherit optional lockscreen clock plugins on mobile products
+
+Prefer the SystemUIClocks product makefile when present. Support the PixelOS proprietary layout at vendor/pixel/clocks as a fallback. Its seventeen branch controls Google clock inclusion with WITH_GMS.
+---
+ config/common_mobile.mk | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/config/common_mobile.mk b/config/common_mobile.mk
+index 83ad397..bef84f3 100644
+--- a/config/common_mobile.mk
++++ b/config/common_mobile.mk
+@@ -86,3 +86,10 @@ PRODUCT_PACKAGES += \
+     LineageBlackTheme \
+     ThemePicker \
+     ThemesStub
++
++# Lockscreen clock plugins
++ifneq ($(wildcard packages/apps/SystemUIClocks/clocks.mk),)
++$(call inherit-product-if-exists, packages/apps/SystemUIClocks/clocks.mk)
++else
++$(call inherit-product-if-exists, vendor/pixel/clocks/products/clocks.mk)
++endif
+-- 
+2.56.1
+
