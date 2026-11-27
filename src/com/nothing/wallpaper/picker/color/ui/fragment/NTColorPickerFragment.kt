@@ -38,8 +38,7 @@ import kotlinx.coroutines.launch
 /**
  * Nothing OS color picker fragment. Extends AOSP's color picker system to surface
  * wallpaper-derived and preset color options using the existing ColorPickerViewModel,
- * matching the layout and tab structure observed in Nothing OS (wallpaper color tab +
- * preset color tab + color option icon grid).
+ * matching the layout and tab structure observed in Nothing OS.
  */
 @AndroidEntryPoint
 class NTColorPickerFragment : Fragment() {
@@ -49,8 +48,7 @@ class NTColorPickerFragment : Fragment() {
 
     private lateinit var colorPickerViewModel: ColorPickerViewModel
     private lateinit var colorOptionsRecyclerView: RecyclerView
-    private lateinit var wallpaperColorTab: TextView
-    private lateinit var presetColorTab: TextView
+    private lateinit var colorTypeSubhead: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,11 +57,9 @@ class NTColorPickerFragment : Fragment() {
     ): View {
         colorPickerViewModel = optionsViewModel.colorPickerViewModel2
 
-        // Inflate the standard AOSP color picker floating sheet layout as our root.
-        // Nothing OS uses the same underlying layout (color_picker_fragment) with additional
-        // tab headers for wallpaper color vs preset color sections.
+        // Use standard AOSP floating_sheet_colors layout
         val root = inflater.inflate(
-            com.android.themepicker.R.layout.colors_floating_sheet,
+            com.android.themepicker.R.layout.floating_sheet_colors,
             container,
             false,
         )
@@ -74,40 +70,16 @@ class NTColorPickerFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         colorOptionsRecyclerView = view.requireViewById(
-            com.android.themepicker.R.id.color_option_list,
+            com.android.themepicker.R.id.colors_horizontal_list,
         )
-        wallpaperColorTab = view.requireViewById(
-            com.android.themepicker.R.id.wallpaper_color_tab,
-        )
-        presetColorTab = view.requireViewById(
-            com.android.themepicker.R.id.preset_color_tab,
+        colorTypeSubhead = view.requireViewById(
+            com.android.themepicker.R.id.color_type_tab_subhead,
         )
 
         colorOptionsRecyclerView.layoutManager =
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
-        bindTabSelection()
         bindColorOptions()
-    }
-
-    private fun bindTabSelection() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                colorPickerViewModel.colorTypeTabs.collect { tabs ->
-                    tabs.forEach { tab ->
-                        val tabView = if (tab.name ==
-                            getString(com.android.themepicker.R.string.wallpaper_color_tab)
-                        ) {
-                            wallpaperColorTab
-                        } else {
-                            presetColorTab
-                        }
-                        tabView.isSelected = tab.isSelected
-                        tabView.setOnClickListener { tab.onClick() }
-                    }
-                }
-            }
-        }
     }
 
     private fun bindColorOptions() {
@@ -125,11 +97,6 @@ class NTColorPickerFragment : Fragment() {
         }
     }
 
-    /**
-     * RecyclerView adapter that renders each color option using the AOSP ColorOptionIconView,
-     * then delegates the icon binding (color swatch rendering + selection stroke update) to
-     * the existing AOSP ColorOptionIconBinder.
-     */
     private inner class NTColorOptionAdapter(
         private val options: List<ColorOptionIconViewModel>,
         private val onItemClick: (Int) -> Unit,
