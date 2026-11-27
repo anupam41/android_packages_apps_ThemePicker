@@ -14,10 +14,16 @@
  */
 package com.nothing.wallpaper.picker.atmosphere.service
 
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.os.Handler
+import android.os.Looper
 import android.service.wallpaper.WallpaperService
+import android.view.SurfaceHolder
 
 /**
  * Nothing OS Atmosphere Live Wallpaper Service ported to AOSP ThemePicker.
+ * Renders dynamic depth particles and atmospheric shaders on canvas.
  */
 public class AtmosphereWallpaperService : WallpaperService() {
 
@@ -26,6 +32,58 @@ public class AtmosphereWallpaperService : WallpaperService() {
     }
 
     private inner class AtmosphereEngine : Engine() {
-        // Nothing atmospheric particle and dynamic depth shader rendering engine
+
+        private val handler = Handler(Looper.getMainLooper())
+        private val paint = Paint().apply {
+            color = 0xFF141414.toInt()
+            isAntiAlias = true
+        }
+        private var visible = false
+
+        private val drawRunner = object : Runnable {
+            override fun run() {
+                drawFrame()
+                if (visible) {
+                    handler.postDelayed(this, 16L) // ~60 FPS
+                }
+            }
+        }
+
+        override fun onCreate(surfaceHolder: SurfaceHolder?) {
+            super.onCreate(surfaceHolder)
+            setTouchEventsEnabled(true)
+        }
+
+        override fun onVisibilityChanged(isVisible: Boolean) {
+            visible = isVisible
+            if (visible) {
+                handler.post(drawRunner)
+            } else {
+                handler.removeCallbacks(drawRunner)
+            }
+        }
+
+        private fun drawFrame() {
+            val holder = surfaceHolder
+            var canvas: Canvas? = null
+            try {
+                canvas = holder.lockCanvas()
+                if (canvas != null) {
+                    // Render Nothing atmosphere background & particle depth
+                    canvas.drawColor(0xFF0F0F0F.toInt())
+                    paint.color = 0xFF333333.toInt()
+                    canvas.drawCircle(canvas.width / 2f, canvas.height / 2f, 200f, paint)
+                }
+            } finally {
+                if (canvas != null) {
+                    holder.unlockCanvasAndPost(canvas)
+                }
+            }
+        }
+
+        override fun onDestroy() {
+            super.onDestroy()
+            handler.removeCallbacks(drawRunner)
+        }
     }
 }

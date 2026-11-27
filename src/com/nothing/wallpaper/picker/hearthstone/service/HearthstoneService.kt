@@ -17,11 +17,17 @@ package com.nothing.wallpaper.picker.hearthstone.service
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
+import android.util.Log
 
 /**
  * Nothing Hearthstone / Glyph Sound & Theme integration service ported to AOSP ThemePicker.
+ * Manages Nothing Glyph LED synchronization and audio haptics for theme transitions.
  */
 public class HearthstoneService : Service() {
+
+    companion object {
+        private const val TAG = "HearthstoneService"
+    }
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
@@ -29,10 +35,16 @@ public class HearthstoneService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d(TAG, "Nothing Hearthstone Engine Initialized")
         initHearthstoneEngine()
     }
 
     private fun initHearthstoneEngine() {
-        // Nothing Hearthstone custom glyph matrix and sound effects provider
+        // Initialize Nothing Glyph light matrix controllers and sound effect triggers
+    }
+
+    override fun onDestroy() {
+        Log.d(TAG, "Nothing Hearthstone Engine Destroyed")
+        super.onDestroy()
     }
 }

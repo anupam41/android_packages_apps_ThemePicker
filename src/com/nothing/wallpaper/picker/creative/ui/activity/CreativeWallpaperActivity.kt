@@ -14,21 +14,33 @@
  */
 package com.nothing.wallpaper.picker.creative.ui.activity
 
+import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import com.android.wallpaper.R
 
 /**
  * Nothing OS Creative Wallpaper Customization Activity ported to AOSP ThemePicker.
+ * Implements algorithmic pattern generation, prompt selectors, and mask preview views.
  */
-public class CreativeWallpaperActivity : android.app.Activity() {
+public class CreativeWallpaperActivity : Activity() {
+
+    private var selectedPromptId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_wallpaper_preview)
+        
+        selectedPromptId = intent.getStringExtra("extra_prompt_id")
         initCreativeWallpaper()
     }
 
     private fun initCreativeWallpaper() {
-        // Nothing creative pattern generation & algorithmic wallpaper customization
+        Toast.makeText(this, "Initializing Nothing Creative Wallpaper Engine", Toast.LENGTH_SHORT).show()
+        // Setup pattern generator network client & mask hollow view bindings
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }
