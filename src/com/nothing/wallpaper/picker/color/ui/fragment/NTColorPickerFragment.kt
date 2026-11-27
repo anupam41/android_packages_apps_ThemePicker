@@ -32,13 +32,14 @@ import com.android.customization.picker.color.ui.viewmodel.ColorOptionIconViewMo
 import com.android.customization.picker.color.ui.viewmodel.ColorPickerViewModel
 import com.android.wallpaper.customization.ui.viewmodel.ThemePickerCustomizationOptionsViewModel
 import com.android.wallpaper.picker.customization.ui.viewmodel.ColorUpdateViewModel
+import com.android.wallpaper.picker.option.ui.viewmodel.OptionItemViewModel2
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 /**
  * Nothing OS color picker fragment. Extends AOSP's color picker system to surface
  * wallpaper-derived and preset color options using the existing ColorPickerViewModel,
- * matching the layout and tab structure observed in Nothing OS.
+ * matching the layout, tab switching, subhead text, and click callbacks observed in Nothing OS.
  */
 @AndroidEntryPoint
 class NTColorPickerFragment : Fragment() {
@@ -49,6 +50,8 @@ class NTColorPickerFragment : Fragment() {
     private lateinit var colorPickerViewModel: ColorPickerViewModel
     private lateinit var colorOptionsRecyclerView: RecyclerView
     private lateinit var colorTypeSubhead: TextView
+    private lateinit var wallpaperColorTab: TextView
+    private lateinit var presetColorTab: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -57,7 +60,6 @@ class NTColorPickerFragment : Fragment() {
     ): View {
         colorPickerViewModel = optionsViewModel.colorPickerViewModel2
 
-        // Use standard AOSP floating_sheet_colors layout
         val root = inflater.inflate(
             com.android.themepicker.R.layout.floating_sheet_colors,
             container,
@@ -80,15 +82,25 @@ class NTColorPickerFragment : Fragment() {
             LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
         bindColorOptions()
+        bindSubhead()
+    }
+
+    private fun bindSubhead() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                colorPickerViewModel.colorTypeTabSubheader.collect { subheadText ->
+                    colorTypeSubhead.text = subheadText
+                }
+            }
+        }
     }
 
     private fun bindColorOptions() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                colorPickerViewModel.colorOptions.collect { options ->
+                colorPickerViewModel.colorOptions.collect { optionItems ->
                     colorOptionsRecyclerView.adapter = NTColorOptionAdapter(
-                        options = options.map { it.payload },
-                        onItemClick = { /* handled by OptionItemViewModel2.onClicked */ },
+                        optionItems = optionItems,
                         colorUpdateViewModel = colorUpdateViewModel,
                         lifecycleOwner = viewLifecycleOwner,
                     )
@@ -97,14 +109,13 @@ class NTColorPickerFragment : Fragment() {
         }
     }
 
-    private inner class NTColorOptionAdapter(
-        private val options: List<ColorOptionIconViewModel>,
-        private val onItemClick: (Int) -> Unit,
+    private class NTColorOptionAdapter(
+        private val optionItems: List<OptionItemViewModel2<ColorOptionIconViewModel>>,
         private val colorUpdateViewModel: ColorUpdateViewModel,
-        private val lifecycleOwner: androidx.lifecycle.LifecycleOwner,
+        private val lifecycleOwner: LifecycleOwner,
     ) : RecyclerView.Adapter<NTColorOptionAdapter.ViewHolder>() {
 
-        inner class ViewHolder(val iconView: ColorOptionIconView) :
+        class ViewHolder(val iconView: ColorOptionIconView) :
             RecyclerView.ViewHolder(iconView)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -113,17 +124,20 @@ class NTColorPickerFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val vm = options[position]
+            val item = optionItems[position]
             ColorOptionIconBinder.bind(
                 view = holder.iconView,
-                viewModel = vm,
+                viewModel = item.payload,
                 colorUpdateViewModel = colorUpdateViewModel,
                 shouldAnimateColor = { true },
                 lifecycleOwner = lifecycleOwner,
             )
-            holder.iconView.setOnClickListener { onItemClick(position) }
+            // Properly invoke the AOSP OptionItemViewModel2 click handler when tapped
+            holder.iconView.setOnClickListener {
+                item.onClicked()
+            }
         }
 
-        override fun getItemCount(): Int = options.size
+        override fun getItemCount(): Int = optionItems.size
     }
 }
