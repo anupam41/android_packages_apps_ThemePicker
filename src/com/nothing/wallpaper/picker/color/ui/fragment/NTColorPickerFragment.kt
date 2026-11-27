@@ -22,6 +22,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -39,7 +40,7 @@ import kotlinx.coroutines.launch
 /**
  * Nothing OS color picker fragment. Extends AOSP's color picker system to surface
  * wallpaper-derived and preset color options using the existing ColorPickerViewModel,
- * matching the layout, tab switching, subhead text, and click callbacks observed in Nothing OS.
+ * matching the layout, subhead text, and click callbacks observed in Nothing OS.
  */
 @AndroidEntryPoint
 class NTColorPickerFragment : Fragment() {
@@ -50,8 +51,6 @@ class NTColorPickerFragment : Fragment() {
     private lateinit var colorPickerViewModel: ColorPickerViewModel
     private lateinit var colorOptionsRecyclerView: RecyclerView
     private lateinit var colorTypeSubhead: TextView
-    private lateinit var wallpaperColorTab: TextView
-    private lateinit var presetColorTab: TextView
 
     override fun onCreateView(
         inflater: LayoutInflater,
