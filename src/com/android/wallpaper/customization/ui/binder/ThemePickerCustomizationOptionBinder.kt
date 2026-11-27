@@ -48,10 +48,10 @@ import com.android.customization.picker.color.ui.compose.ColorFloatingSheet
 import com.android.customization.picker.color.ui.view.ColorOptionIconView
 import com.android.customization.picker.color.ui.viewmodel.ColorOptionIconViewModel
 import com.android.customization.picker.grid.ui.binder.GridFloatingSheetBinder
-import com.android.customization.picker.icon.ui.binder.AppIconFloatingSheetBinder
 import com.android.customization.picker.icon.ui.binder.ShapeIconViewBinder
 import com.android.customization.picker.icon.ui.util.IconStyleViewUtil
-import com.android.customization.picker.quickaffordance.ui.binder.ShortcutFloatingSheetBinder
+import com.nothing.wallpaper.picker.icon.ui.binder.NTAppIconFloatingSheetBinder
+import com.nothing.wallpaper.picker.quickaffordance.ui.binder.NTShortcutFloatingSheetBinder
 import com.android.customization.picker.quickaffordance.ui.compose.ShortcutsFloatingSheet
 import com.android.customization.picker.settings.ui.binder.ColorContrastSectionViewBinder2
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockAxisStyle
@@ -692,7 +692,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
             customizationOptionFloatingSheetViewMap
                 ?.get(ThemePickerLockCustomizationOption.SHORTCUTS)
                 ?.let {
-                    ShortcutFloatingSheetBinder.bind(
+                    NTShortcutFloatingSheetBinder.bind(
                         it,
                         optionsViewModel,
                         colorUpdateViewModel,
@@ -734,13 +734,11 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
         customizationOptionFloatingSheetViewMap
             ?.get(ThemePickerHomeCustomizationOption.APP_ICONS)
             ?.let {
-                AppIconFloatingSheetBinder.bind(
+                NTAppIconFloatingSheetBinder.bind(
                     it,
                     optionsViewModel,
-                    iconStyleViewUtil,
                     colorUpdateViewModel,
                     lifecycleOwner,
-                    Dispatchers.IO,
                 )
             }
 
