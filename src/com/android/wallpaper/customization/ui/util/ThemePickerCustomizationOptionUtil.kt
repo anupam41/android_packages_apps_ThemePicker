@@ -33,6 +33,7 @@ constructor(private val defaultCustomizationOptionUtil: DefaultCustomizationOpti
 
     enum class ThemePickerLockCustomizationOption : CustomizationOption {
         CLOCK,
+        WIDGETS,
         SHORTCUTS,
         LOCK_SCREEN_NOTIFICATIONS,
         MORE_LOCK_SCREEN_SETTINGS,

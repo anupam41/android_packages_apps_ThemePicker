@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widgets_title">Lock screen widgets</string>
+    <string name="widgets_description">Customize widgets in Glanceable Hub</string>
+    <string name="widgets_unavailable">Widget editing is currently unavailable.</string>
+</resources>

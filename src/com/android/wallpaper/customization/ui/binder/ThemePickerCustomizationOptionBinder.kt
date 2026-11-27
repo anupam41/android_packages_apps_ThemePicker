@@ -100,6 +100,33 @@ class ThemePickerCustomizationOptionsBinder
 constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationOptionsBinder) :
     CustomizationOptionsBinder {
 
+    private fun bindWidgets(entry: View, lifecycleOwner: LifecycleOwner) {
+        val context = entry.context
+        val authority = com.android.systemui.shared.customization.data.content.CustomizationProviderContract.AUTHORITY
+        val uri = Uri.Builder().scheme("content").authority(authority).build()
+        lifecycleOwner.lifecycleScope.launch {
+            lifecycleOwner.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                val available = withContext(Dispatchers.IO) {
+                    callCustomizationProvider(context, uri, "supports_widget_editor", null)
+                        ?.getBoolean("available") == true
+                }
+                entry.isVisible = available
+                entry.setOnClickListener {
+                    lifecycleOwner.lifecycleScope.launch {
+                        val opened = withContext(Dispatchers.IO) {
+                            callCustomizationProvider(context, uri, "open_widget_editor", null)
+                                ?.getBoolean("available") == true
+                        }
+                        if (!opened) {
+                            Toast.makeText(context, R.string.widgets_unavailable,
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private fun bindIconPacks(entry: View, lifecycleOwner: LifecycleOwner) {
         val context = entry.context
         lifecycleOwner.lifecycleScope.launch {
@@ -111,7 +138,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
                 if (preview.supportsPreview()) preview.getUri("icon_packs") else null
             } ?: return@launch
             val supported = withContext(Dispatchers.IO) {
-                iconPackCall(context, provider, "list_icon_packs", null) != null
+                callCustomizationProvider(context, provider, "list_icon_packs", null) != null
             }
             if (!supported) return@launch
             entry.isVisible = true
@@ -119,7 +146,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
                 entry.isEnabled = false
                 lifecycleOwner.lifecycleScope.launch {
                     val result = withContext(Dispatchers.IO) {
-                        iconPackCall(context, provider, "list_icon_packs", null)
+                        callCustomizationProvider(context, provider, "list_icon_packs", null)
                     }
                     entry.isEnabled = true
                     val packages = result?.getStringArrayList("packages") ?: return@launch
@@ -135,7 +162,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
                             entry.isEnabled = false
                             lifecycleOwner.lifecycleScope.launch {
                                 val applied = withContext(Dispatchers.IO) {
-                                    iconPackCall(context, provider, "select_icon_pack",
+                                    callCustomizationProvider(context, provider, "select_icon_pack",
                                         packages[position])?.getBoolean("success") == true
                                 }
                                 entry.isEnabled = true
@@ -151,7 +178,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
         }
     }
 
-    private fun iconPackCall(
+    private fun callCustomizationProvider(
         context: Context, uri: Uri, method: String, argument: String?,
     ): android.os.Bundle? = try {
         context.contentResolver.call(uri, method, argument, null)
@@ -323,6 +350,11 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
             .firstOrNull { it.first == ThemePickerHomeCustomizationOption.ICON_PACK }
             ?.second
             ?.let { bindIconPacks(it, lifecycleOwner) }
+
+        lockScreenCustomizationOptionEntries
+            .firstOrNull { it.first == ThemePickerLockCustomizationOption.WIDGETS }
+            ?.second
+            ?.let { bindWidgets(it, lifecycleOwner) }
 
         val optionClock: View =
             lockScreenCustomizationOptionEntries
