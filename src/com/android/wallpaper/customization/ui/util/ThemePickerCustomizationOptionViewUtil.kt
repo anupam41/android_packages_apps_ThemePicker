@@ -282,7 +282,7 @@ constructor(
         layoutInflater: LayoutInflater,
     ): View =
         when (option) {
-            CLOCK -> R.layout.floating_sheet_clock
+            CLOCK -> R.layout.nt_floating_sheet_clock
             SHORTCUTS -> R.layout.floating_sheet_shortcut
             COLORS -> R.layout.floating_sheet_colors
             APP_ICONS -> R.layout.floating_sheet_app_icon

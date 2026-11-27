@@ -38,7 +38,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.customization.model.color.ColorOptionImpl
-import com.android.customization.picker.clock.ui.binder.ClockFloatingSheetBinder
+import com.nothing.wallpaper.picker.clock.ui.binder.NTClockFloatingSheetBinder
 import com.android.customization.picker.clock.ui.view.ClockConstraintLayoutHostView
 import com.android.customization.picker.clock.ui.view.ClockConstraintLayoutHostView.Companion.addClockViews
 import com.android.customization.picker.clock.ui.view.ClockViewFactory
@@ -670,7 +670,7 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
         customizationOptionFloatingSheetViewMap
             ?.get(ThemePickerLockCustomizationOption.CLOCK)
             ?.let {
-                ClockFloatingSheetBinder.bind(
+                NTClockFloatingSheetBinder.bind(
                     it,
                     optionsViewModel,
                     colorUpdateViewModel,
