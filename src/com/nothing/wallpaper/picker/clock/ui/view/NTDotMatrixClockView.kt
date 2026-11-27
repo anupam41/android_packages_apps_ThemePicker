@@ -30,18 +30,20 @@ import java.util.Locale
  * Custom View rendering Nothing OS's distinctive Dot Matrix clock aesthetic.
  *
  * Draws time digits in a segmented dot-matrix grid with soft shadow glow matching
- * Nothing OS lock screen design guidelines, supporting live ticking and dynamic style properties.
+ * Nothing OS lock screen design guidelines, supporting precise top-of-minute/second ticking
+ * and cached SimpleDateFormat instances to avoid GC churn.
  */
 class NTDotMatrixClockView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
-    defStyleAttr: Int = 0,
+    defStyleAttr: Int,
 ) : View(context, attrs, defStyleAttr) {
 
     var clockStyle: NTClockStyle = NTClockStyle()
         set(value) {
             field = value
             updatePaints()
+            updateDateFormat()
             invalidate()
         }
 
@@ -60,23 +62,24 @@ class NTDotMatrixClockView @JvmOverloads constructor(
         setShadowLayer(32f, 0f, 0f, Color.WHITE)
     }
 
-    private val timeFormat: SimpleDateFormat
-        get() = if (clockStyle.showSeconds) {
-            SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-        } else {
-            SimpleDateFormat("HH:mm", Locale.getDefault())
-        }
+    private lateinit var cachedTimeFormat: SimpleDateFormat
 
     private val tickRunnable = object : Runnable {
         override fun run() {
             invalidate()
-            val interval = if (clockStyle.showSeconds) 1000L else 30000L
-            postDelayed(this, interval)
+            val now = System.currentTimeMillis()
+            val interval = if (clockStyle.showSeconds) {
+                1000L - (now % 1000L)
+            } else {
+                60000L - (now % 60000L)
+            }
+            postDelayed(this, interval.coerceAtLeast(100L))
         }
     }
 
     init {
         updatePaints()
+        updateDateFormat()
     }
 
     private fun updatePaints() {
@@ -86,6 +89,14 @@ class NTDotMatrixClockView @JvmOverloads constructor(
 
         val alpha = (200 * clockStyle.glowIntensity).toInt().coerceIn(0, 255)
         glowPaint.color = Color.argb(alpha, 255, 255, 255)
+    }
+
+    private fun updateDateFormat() {
+        cachedTimeFormat = if (clockStyle.showSeconds) {
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        } else {
+            SimpleDateFormat("HH:mm", Locale.getDefault())
+        }
     }
 
     override fun onAttachedToWindow() {
@@ -101,7 +112,7 @@ class NTDotMatrixClockView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        val timeString = timeFormat.format(Date())
+        val timeString = cachedTimeFormat.format(Date())
         val x = width / 2f
         val y = (height / 2f) - ((textPaint.descent() + textPaint.ascent()) / 2f)
 
