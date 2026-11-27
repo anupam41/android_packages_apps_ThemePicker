@@ -30,4 +30,8 @@ data class NTClockStyle(
     val isBold: Boolean = true,
     val showSeconds: Boolean = false,
     val glowIntensity: Float = 0.8f,
-) : Parcelable
+) : Parcelable {
+    companion object {
+        const val CLOCK_ID = "nothing_dot_matrix"
+    }
+}
