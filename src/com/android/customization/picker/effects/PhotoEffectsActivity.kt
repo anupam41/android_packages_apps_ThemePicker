@@ -19,10 +19,7 @@ import com.android.themepicker.R
 import com.android.wallpaper.model.ImageWallpaperInfo
 import com.android.wallpaper.picker.preview.ui.WallpaperPreviewActivity
 import java.io.File
-import java.io.IOException
-import kotlin.math.PI
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import java.io.FileOutputStream
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -97,48 +94,27 @@ class PhotoEffectsActivity : ComponentActivity() {
     private fun render(uri: Uri): Uri {
         val input = ImageDecoder.createSource(contentResolver, uri)
         val image = ImageDecoder.decodeBitmap(input) { decoder, info, _ ->
-            val width = info.size.width
-            val height = info.size.height
-            val scale = minOf(1.0, 3072.0 / maxOf(width, height))
-            decoder.setTargetSize(
-                maxOf(1, (width * scale).roundToInt()),
-                maxOf(1, (height * scale).roundToInt()),
-            )
-            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            val scale = minOf(1.0, 3072.0 / maxOf(info.size.width, info.size.height))
+            if (scale < 1.0) decoder.setTargetSize((info.size.width * scale).toInt(), (info.size.height * scale).toInt())
         }
-        val width = image.width
-        val height = image.height
-        val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val output = Bitmap.createBitmap(image.width, image.height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(output)
-        val paint = Paint(Paint.FILTER_BITMAP_FLAG)
-        if (effect == R.string.photo_effect_blur) {
-            val small = Bitmap.createScaledBitmap(image, maxOf(1, width / 48), maxOf(1, height / 48), true)
-            canvas.drawBitmap(small, null, Rect(0, 0, width, height), paint)
+        val paint = Paint().apply { isAntiAlias = true; isFilterBitmap = true }
+        if (effect == R.string.photo_effect_glass) {
+            val stripe = 32
+            canvas.drawBitmap(image, 0f, 0f, paint)
+            for (x in 0 until image.width step stripe) {
+                val r = minOf(x + stripe, image.width)
+                canvas.drawBitmap(image, Rect(x, 0, r, image.height), Rect(x + 4, 0, r + 4, image.height), paint)
+            }
         } else {
-            val period = maxOf(8, width / 32)
-            val from = Rect(0, 0, 0, height)
-            val to = Rect(0, 0, 0, height)
-            for (x in 0 until width) {
-                val shift = (period * 0.22 * sin(2 * PI * (x % period) / period)).roundToInt()
-                from.left = (x + shift).coerceIn(0, width - 1)
-                from.right = from.left + 1
-                to.left = x
-                to.right = x + 1
-                canvas.drawBitmap(image, from, to, paint)
-            }
+            val scaled = Bitmap.createScaledBitmap(image, image.width / 8, image.height / 8, true)
+            canvas.drawBitmap(Bitmap.createScaledBitmap(scaled, image.width, image.height, true), 0f, 0f, paint)
         }
-        val dir = File(cacheDir, "wallpaper-effects").apply { mkdirs() }
-        val cutoff = System.currentTimeMillis() - 7L * 24 * 60 * 60 * 1000
-        dir.listFiles()?.filter { it.lastModified() < cutoff }?.forEach { it.delete() }
-        val file = File.createTempFile("preview-", ".png", dir)
-        try {
-            file.outputStream().buffered().use {
-                if (!output.compress(Bitmap.CompressFormat.PNG, 100, it)) throw IOException("PNG encode failed")
-            }
-            return FileProvider.getUriForFile(this, "com.android.wallpaper.photoeffects", file)
-        } catch (e: Exception) {
-            file.delete()
-            throw e
-        }
+        val dir = File(cacheDir, "wallpaper-effects")
+        dir.mkdirs()
+        val file = File(dir, "effect_${System.currentTimeMillis()}.png")
+        FileOutputStream(file).use { out -> output.compress(Bitmap.CompressFormat.PNG, 100, out) }
+        return FileProvider.getUriForFile(this, "${packageName}.effects.provider", file)
     }
 }
