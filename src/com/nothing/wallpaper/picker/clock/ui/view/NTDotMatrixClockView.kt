@@ -18,8 +18,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.View
+import com.nothing.wallpaper.picker.clock.model.NTClockStyle
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,7 +30,7 @@ import java.util.Locale
  * Custom View rendering Nothing OS's distinctive Dot Matrix clock aesthetic.
  *
  * Draws time digits in a segmented dot-matrix grid with soft shadow glow matching
- * Nothing OS lock screen design guidelines.
+ * Nothing OS lock screen design guidelines, supporting live ticking and dynamic style properties.
  */
 class NTDotMatrixClockView @JvmOverloads constructor(
     context: Context,
@@ -36,23 +38,65 @@ class NTDotMatrixClockView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
 
+    var clockStyle: NTClockStyle = NTClockStyle()
+        set(value) {
+            field = value
+            updatePaints()
+            invalidate()
+        }
+
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textSize = 140f
         textAlign = Paint.Align.CENTER
-        // Use monospace font to simulate fixed-width dot matrix layout
-        typeface = android.graphics.Typeface.MONOSPACE
+        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
     }
 
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(100, 255, 255, 255)
+        color = Color.argb(200, 255, 255, 255)
         textSize = 140f
         textAlign = Paint.Align.CENTER
-        typeface = android.graphics.Typeface.MONOSPACE
-        setShadowLayer(24f, 0f, 0f, Color.WHITE)
+        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        setShadowLayer(32f, 0f, 0f, Color.WHITE)
     }
 
-    private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    private val timeFormat: SimpleDateFormat
+        get() = if (clockStyle.showSeconds) {
+            SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        } else {
+            SimpleDateFormat("HH:mm", Locale.getDefault())
+        }
+
+    private val tickRunnable = object : Runnable {
+        override fun run() {
+            invalidate()
+            val interval = if (clockStyle.showSeconds) 1000L else 30000L
+            postDelayed(this, interval)
+        }
+    }
+
+    init {
+        updatePaints()
+    }
+
+    private fun updatePaints() {
+        val tfStyle = if (clockStyle.isBold) Typeface.BOLD else Typeface.NORMAL
+        textPaint.typeface = Typeface.create(Typeface.MONOSPACE, tfStyle)
+        glowPaint.typeface = Typeface.create(Typeface.MONOSPACE, tfStyle)
+
+        val alpha = (200 * clockStyle.glowIntensity).toInt().coerceIn(0, 255)
+        glowPaint.color = Color.argb(alpha, 255, 255, 255)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        post(tickRunnable)
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        removeCallbacks(tickRunnable)
+    }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)

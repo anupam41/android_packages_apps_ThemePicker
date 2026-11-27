@@ -25,7 +25,7 @@ import kotlinx.parcelize.Parcelize
  */
 @Parcelize
 data class NTClockStyle(
-    val id: String = "nothing_dot_matrix",
+    val id: String = CLOCK_ID,
     val title: String = "Nothing Dot Matrix",
     val isBold: Boolean = true,
     val showSeconds: Boolean = false,
