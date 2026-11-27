@@ -17,10 +17,12 @@
 package com.android.wallpaper.customization.ui.binder
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.AdaptiveIconDrawable
+import android.net.Uri
 import android.provider.Settings
 import android.view.View
 import android.view.ViewGroup
@@ -54,6 +56,7 @@ import com.android.customization.picker.icon.ui.util.IconStyleViewUtil
 import com.android.customization.picker.quickaffordance.ui.binder.ShortcutFloatingSheetBinder
 import com.android.customization.picker.quickaffordance.ui.compose.ShortcutsFloatingSheet
 import com.android.customization.picker.settings.ui.binder.ColorContrastSectionViewBinder2
+import com.android.customization.picker.wallpapereffects.WallpaperEffectsActivity
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockAxisStyle
 import com.android.themepicker.R
 import com.android.wallpaper.config.BaseFlags
@@ -72,6 +75,8 @@ import com.android.wallpaper.picker.customization.ui.viewmodel.ColorUpdateViewMo
 import com.android.wallpaper.picker.customization.ui.viewmodel.CustomizationOptionsData
 import com.android.wallpaper.picker.customization.ui.viewmodel.CustomizationOptionsViewModel
 import com.android.wallpaper.picker.customization.ui.viewmodel.CustomizationPickerViewModel2
+import com.android.wallpaper.model.Screen
+import com.android.wallpaper.util.PreviewUtils
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.google.android.material.snackbar.Snackbar
@@ -87,12 +92,128 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Singleton
 class ThemePickerCustomizationOptionsBinder
 @Inject
 constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationOptionsBinder) :
     CustomizationOptionsBinder {
+
+    private fun bindIconPacks(entry: View, lifecycleOwner: LifecycleOwner) {
+        val context = entry.context
+        lifecycleOwner.lifecycleScope.launch {
+            val provider = withContext(Dispatchers.IO) {
+                val preview = PreviewUtils(
+                    context, context.getString(R.string.grid_control_metadata_name),
+                    Screen.HOME_SCREEN,
+                )
+                if (preview.supportsPreview()) preview.getUri("icon_packs") else null
+            } ?: return@launch
+            val supported = withContext(Dispatchers.IO) {
+                iconPackCall(context, provider, "list_icon_packs", null) != null
+            }
+            if (!supported) return@launch
+            entry.isVisible = true
+            entry.setOnClickListener {
+                entry.isEnabled = false
+                lifecycleOwner.lifecycleScope.launch {
+                    val result = withContext(Dispatchers.IO) {
+                        iconPackCall(context, provider, "list_icon_packs", null)
+                    }
+                    entry.isEnabled = true
+                    val packages = result?.getStringArrayList("packages") ?: return@launch
+                    val labels = result.getStringArrayList("labels") ?: return@launch
+                    if (packages.size != labels.size) return@launch
+                    packages.add(0, "")
+                    labels.add(0, context.getString(R.string.icon_pack_default))
+                    val selected = packages.indexOf(result.getString("selected", ""))
+                    AlertDialog.Builder(context)
+                        .setTitle(R.string.icon_pack_title)
+                        .setSingleChoiceItems(labels.toTypedArray(), selected) { dialog, position ->
+                            dialog.dismiss()
+                            entry.isEnabled = false
+                            lifecycleOwner.lifecycleScope.launch {
+                                val applied = withContext(Dispatchers.IO) {
+                                    iconPackCall(context, provider, "select_icon_pack",
+                                        packages[position])?.getBoolean("success") == true
+                                }
+                                entry.isEnabled = true
+                                Toast.makeText(context,
+                                    if (applied) R.string.icon_pack_applied
+                                    else R.string.icon_pack_failed, Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
+            }
+        }
+    }
+
+    private fun iconPackCall(
+        context: Context, uri: Uri, method: String, argument: String?,
+    ): android.os.Bundle? = try {
+        context.contentResolver.call(uri, method, argument, null)
+    } catch (_: SecurityException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
+    }
+
+    private fun bindWorkspaceReset(entry: View, lifecycleOwner: LifecycleOwner) {
+        val context = entry.context
+        lifecycleOwner.lifecycleScope.launch {
+            val providerUri = withContext(Dispatchers.IO) {
+                val preview = PreviewUtils(
+                    context,
+                    context.getString(R.string.grid_control_metadata_name),
+                    Screen.HOME_SCREEN,
+                )
+                if (preview.supportsPreview()) preview.getUri("workspace_reset") else null
+            } ?: return@launch
+            val supported = withContext(Dispatchers.IO) {
+                callWorkspaceResetProvider(context, providerUri, "supports_workspace_reset")
+            }
+            if (!supported) return@launch
+
+            entry.isVisible = true
+            entry.setOnClickListener {
+                AlertDialog.Builder(context)
+                    .setTitle(R.string.workspace_reset_title)
+                    .setMessage(R.string.workspace_reset_confirmation)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.workspace_reset_action) { _, _ ->
+                        entry.isEnabled = false
+                        lifecycleOwner.lifecycleScope.launch {
+                            val success = withContext(Dispatchers.IO) {
+                                callWorkspaceResetProvider(context, providerUri, "reset_workspace")
+                            }
+                            entry.isEnabled = true
+                            Toast.makeText(
+                                context,
+                                if (success) R.string.workspace_reset_success
+                                else R.string.workspace_reset_failure,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
+                    .show()
+            }
+        }
+    }
+
+    private fun callWorkspaceResetProvider(
+        context: Context,
+        providerUri: Uri,
+        method: String,
+    ): Boolean = try {
+        context.contentResolver.call(providerUri, method, null, null)?.getBoolean("success") == true
+    } catch (_: SecurityException) {
+        false
+    } catch (_: IllegalArgumentException) {
+        false
+    }
 
     @OptIn(FlowPreview::class)
     override fun bind(
@@ -185,6 +306,23 @@ constructor(private val defaultCustomizationOptionsBinder: DefaultCustomizationO
                 lifecycleOwner = lifecycleOwner,
             )
         }
+
+        homeScreenCustomizationOptionEntries
+            .firstOrNull { it.first == ThemePickerHomeCustomizationOption.WALLPAPER_EFFECTS }
+            ?.second
+            ?.setOnClickListener { entry ->
+                entry.context.startActivity(Intent(entry.context, WallpaperEffectsActivity::class.java))
+            }
+
+        homeScreenCustomizationOptionEntries
+            .firstOrNull { it.first == ThemePickerHomeCustomizationOption.RESET_WORKSPACE }
+            ?.second
+            ?.let { bindWorkspaceReset(it, lifecycleOwner) }
+
+        homeScreenCustomizationOptionEntries
+            .firstOrNull { it.first == ThemePickerHomeCustomizationOption.ICON_PACK }
+            ?.second
+            ?.let { bindIconPacks(it, lifecycleOwner) }
 
         val optionClock: View =
             lockScreenCustomizationOptionEntries

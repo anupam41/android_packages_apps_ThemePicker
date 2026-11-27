@@ -102,6 +102,24 @@
             android:theme="@style/CustomizationTheme.NoActionBar"
             android:exported="false"/>
 
+        <activity
+            android:name="com.android.customization.picker.wallpapereffects.WallpaperEffectsActivity"
+            android:exported="false"
+            android:theme="@style/CustomizationTheme.NoActionBar" />
+
+        <service
+            android:name="com.android.customization.picker.wallpapereffects.LiveBlurWallpaperService"
+            android:exported="true"
+            android:label="@string/wallpaper_effects_live_blur"
+            android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.wallpaper"
+                android:resource="@xml/live_blur_wallpaper" />
+        </service>
+
         <activity-alias
             android:name="com.android.customization.picker.CustomizationPickerActivity"
             android:targetActivity="com.android.wallpaper.picker.TrampolinePickerActivity"

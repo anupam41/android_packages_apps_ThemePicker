@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2024 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="wallpaper_effects_title">Wallpaper effects</string>
+    <string name="wallpaper_effects_description">Preview and apply photo effects</string>
+    <string name="wallpaper_effects_pick">Choose photo</string>
+    <string name="wallpaper_effects_preview">Wallpaper preview</string>
+    <string name="wallpaper_effects_apply">Apply wallpaper</string>
+    <string name="wallpaper_effects_home">Home screen</string>
+    <string name="wallpaper_effects_lock">Lock screen</string>
+    <string name="wallpaper_effects_both">Home and lock screens</string>
+    <string name="wallpaper_effects_loading">Preparing preview…</string>
+    <string name="wallpaper_effects_applying">Applying wallpaper…</string>
+    <string name="wallpaper_effects_image_error">Couldn’t open this photo.</string>
+    <string name="wallpaper_effects_apply_error">Couldn’t set the wallpaper.</string>
+    <string name="wallpaper_effects_disallowed">Wallpaper changes are unavailable on this device.</string>
+    <string name="wallpaper_effects_picker_unavailable">No photo picker is available.</string>
+    <string name="wallpaper_effects_choose_effect">Choose an effect</string>
+    <string name="wallpaper_effects_glass">Ribbed glass</string>
+    <string name="wallpaper_effects_original">Original photo</string>
+    <string name="wallpaper_effects_live_blur">Live blur</string>
+    <string name="wallpaper_effects_save">Save image</string>
+    <string name="wallpaper_effects_saving">Saving image…</string>
+    <string name="wallpaper_effects_saved">Image saved.</string>
+    <string name="wallpaper_effects_save_error">Couldn’t save the image.</string>
+    <string-array name="wallpaper_effect_choices">
+        <item>@string/wallpaper_effects_glass</item>
+        <item>@string/wallpaper_effects_original</item>
+        <item>@string/wallpaper_effects_live_blur</item>
+    </string-array>
+    <string name="wallpaper_effects_rotate">Rotate 90°</string>
+    <string name="wallpaper_effects_crop">Crop to screen</string>
+</resources>

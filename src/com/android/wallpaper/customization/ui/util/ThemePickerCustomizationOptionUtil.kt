@@ -43,6 +43,9 @@ constructor(private val defaultCustomizationOptionUtil: DefaultCustomizationOpti
         PACK_THEME,
         COLORS,
         COLOR_CONTRAST,
+        WALLPAPER_EFFECTS,
+        RESET_WORKSPACE,
+        ICON_PACK,
         APP_ICONS,
         GRID,
     }

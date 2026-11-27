@@ -33,7 +33,10 @@ import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptio
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.COLOR_CONTRAST
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.GRID
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.PACK_THEME
+import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.ICON_PACK
+import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.RESET_WORKSPACE
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.SCREEN_SAVER
+import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerHomeCustomizationOption.WALLPAPER_EFFECTS
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption.CLOCK
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption.LOCK_SCREEN_NOTIFICATIONS
 import com.android.wallpaper.customization.ui.util.ThemePickerCustomizationOptionUtil.ThemePickerLockCustomizationOption.MORE_LOCK_SCREEN_SETTINGS
@@ -135,6 +138,14 @@ constructor(
             HOME_SCREEN ->
                 buildList {
                     addAll(defaultOptionEntries)
+                    add(
+                        WALLPAPER_EFFECTS to
+                            layoutInflater.inflate(
+                                R.layout.customization_option_entry_wallpaper_effects,
+                                optionContainer,
+                                false,
+                            )
+                    )
                     if (BaseFlags.get(context).shouldShowDesktopUi(optionContainer.context)) {
                         add(
                             SCREEN_SAVER to
@@ -190,6 +201,21 @@ constructor(
                             GRID to
                                 layoutInflater.inflate(
                                     R.layout.customization_option_entry_grid,
+                                    optionContainer,
+                                    false,
+                                )
+                        )
+                        add(
+                            ICON_PACK to layoutInflater.inflate(
+                                R.layout.customization_option_entry_icon_pack,
+                                optionContainer,
+                                false,
+                            )
+                        )
+                        add(
+                            RESET_WORKSPACE to
+                                layoutInflater.inflate(
+                                    R.layout.customization_option_entry_reset_workspace,
                                     optionContainer,
                                     false,
                                 )
